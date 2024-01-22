@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Tristha Mental Health Clinic</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Tristha Mental Health Clinic</h1>
+        <h2 style="color: #1565C0;; font-weight: bold; font-size: 20px; text-align: center;">Founded by Soumya Srivastava</h2>
+        <form method="post" action="/">
+            <label for="patient_name">Patient Name:</label>
+            <input type="text" id="patient_name" name="patient_name" required>
+            <h2 style="color: #1565C0; font-weight: bold; font-size: 16px; text-align: left;">Note : Please assess based on your mood in last 2 weeks</h2>
+
+            <div class="core-params">
+                <h3 style="color: #1565C0;">Core Parameters</h3>
+                {% for i, core_param_name in core_params %}
+                    <label for="core_param_{{ i }}">{{ core_param_name }} - Level (0-4):</label>
+                    <input type="number" id="core_param_{{ i }}" name="core_param_{{ i }}" min="0" max="4" value="0" required><br>
+                {% endfor %}
+            </div>
+
+            <div class="sec-params">
+                <h3 style="color: #1565C0;;">Secondary Parameters</h3>
+                {% for i, sec_param_name in sec_params %}
+                    <label for="sec_param_{{ i }}">{{ sec_param_name }} - Level (0-4):</label>
+                    <input type="number" id="sec_param_{{ i }}" name="sec_param_{{ i }}" min="0" max="4" value="0" required><br>
+                {% endfor %}
+            </div>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

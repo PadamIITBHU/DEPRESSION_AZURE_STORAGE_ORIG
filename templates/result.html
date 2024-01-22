@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Tristha Mental Health Clinic</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Tristha Mental Health Clinic</h1>
+        <h2 style="color: #1565C0;; font-weight: bold; font-size: 16px; text-align: center;">Founded by Soumya Srivastava</h2>
+        <img src="{{ url_for('static', filename='clinic_image.JPG') }}" alt="Clinic Image">
+        <h3 style="color: #1565C0;; font-weight: bold; font-size: 25px; text-align: center;">Test Result</h3>
+        <p style="color: #1565C0;; font-weight: bold; font-size: 20px; ">{{ result }}</p>
+    </div>
+</body>
+</html>
