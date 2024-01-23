@@ -9,25 +9,44 @@
 <body>
     <div class="container">
         <h1>Tristha Mental Health Clinic</h1>
-        <h2 style="color: #1565C0;; font-weight: bold; font-size: 20px; text-align: center;">Founded by Soumya Srivastava</h2>
         <form method="post" action="/">
             <label for="patient_name">Patient Name:</label>
             <input type="text" id="patient_name" name="patient_name" required>
-            <h2 style="color: #1565C0; font-weight: bold; font-size: 16px; text-align: left;">Note : Please assess based on your mood in last 2 weeks</h2>
+
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" min="0" required>
+
+            <label for="gender">Gender:</label>
+            <input type="text" id="gender" name="gender" required>
+
+            <label for="medical_illness">Any Diagnosed Medical Illness:</label>
+            <input type="text" id="medical_illness" name="medical_illness">
+
+            <h2 style="color: #1565C0; font-weight: bold; font-size: 16px; text-align: left;">Note: Please assess based on your mood in the last 2 weeks</h2>
 
             <div class="core-params">
                 <h3 style="color: #1565C0;">Core Parameters</h3>
                 {% for i, core_param_name in core_params %}
-                    <label for="core_param_{{ i }}">{{ core_param_name }} - Level (0-4):</label>
-                    <input type="number" id="core_param_{{ i }}" name="core_param_{{ i }}" min="0" max="4" value="0" required><br>
+                    <label style="font-weight: bold;">{{ core_param_name.split(' (')[0] }}</label><br>
+                    <label>{{ core_param_name }}</label><br>
+                    <label style="text-align: center;" for="core_score_{{ i }}">Score:</label>
+                    <input type="number" id="core_score_{{ i }}" name="core_score_{{ i }}" min="0" max="4" value="0" required>
+                    <br>
+                    <label style="text-align: center;" for="core_comment_{{ i }}">Comment:</label>
+                    <textarea id="core_comment_{{ i }}" name="core_comment_{{ i }}" rows="4" cols="50"></textarea><br>
                 {% endfor %}
             </div>
 
             <div class="sec-params">
-                <h3 style="color: #1565C0;;">Secondary Parameters</h3>
+                <h3 style="color: #1565C0;">Secondary Parameters</h3>
                 {% for i, sec_param_name in sec_params %}
-                    <label for="sec_param_{{ i }}">{{ sec_param_name }} - Level (0-4):</label>
-                    <input type="number" id="sec_param_{{ i }}" name="sec_param_{{ i }}" min="0" max="4" value="0" required><br>
+                    <label style="font-weight: bold;">{{ sec_param_name.split(' (')[0] }}</label><br>
+                    <label>{{ sec_param_name }}</label><br>
+                    <label style="text-align: center;" for="sec_score_{{ i }}">Score:</label>
+                    <input type="number" id="sec_score_{{ i }}" name="sec_score_{{ i }}" min="0" max="4" value="0" required>
+                    <br>
+                    <label style="text-align: center;" for="sec_comment_{{ i }}">Comment:</label>
+                    <textarea id="sec_comment_{{ i }}" name="sec_comment_{{ i }}" rows="4" cols="50"></textarea><br>
                 {% endfor %}
             </div>
 

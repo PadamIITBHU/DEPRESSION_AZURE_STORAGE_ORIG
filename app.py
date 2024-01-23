@@ -18,10 +18,29 @@ depression_blob_name = "Depression.xlsx"
 remedy_blob_name = "Remedy.xlsx"
 
 # Names for core and secondary parameters
-core_param_names = ["Depressed Mood", "Loss of interest and enjoyment", "Reduced energy leading to increased fatigability, tiredness"]
-sec_param_names = ["Reduced concentration and attention", "Apprehension and worry", "Ideas of guilt",
-                   "Bleak and pessimistic views of the future", "Ideas or acts of self-harm or suicide",
-                   "Disturbed sleep", "Diminished appetite", "Unworthiness", "Loss of libido and sexual desires"]
+#core_param_names = ["Depressed Mood", "Loss of interest and enjoyment", "Reduced energy leading to increased fatigability, tiredness"]
+#sec_param_names = ["Reduced concentration and attention", "Apprehension and worry", "Ideas of guilt",
+#                  "Bleak and pessimistic views of the future", "Ideas or acts of self-harm or suicide",
+#                  "Disturbed sleep", "Diminished appetite", "Unworthiness", "Loss of libido and sexual desires"]
+
+
+core_param_names = [
+    "Depressed Mood (Do you feel low and sad, worthless, hopeless and helpless from past 2 weeks or more?)",
+    "Loss of interest and enjoyment (Do you feel you have lost interest in activities which you used to enjoy earlier?)",
+    "Reduced energy leading to increased fatigability, tiredness and diminished activity (Do you feel low on energy, and tired without any apparent medical reason?)"
+]
+
+sec_param_names = [
+    "Reduced concentration and attention (Do you feel you have reduced concentration and attention, like zoning out or being unable to focus on events and conversations?)",
+    "Apprehension and worry (Do you feel tension, apprehension, and worry for most of the day; is any specific thought going on repeat in your mind?)",
+    "Ideas of guilt (Do you have ideas of guilt that certain incidents of life happened because of you, or do you consider yourself as a culprit for it?)",
+    "Bleak and pessimistic views of the future (Do you have bleak and pessimistic views of the future?)",
+    "Ideas or acts of self-harm or suicide or death wishes (Do you have ideas or acts of self-harm or suicide or death wishes (then score 1), if you have ever planned a suicide (then score 2), if you have attempted self-harm (then score 3), if you have attempted suicide (then score 4))",
+    "Disturbed sleep (Do you feel you have disturbed sleep? If you have problem sleeping due to screentime (then score 1), if you have trouble sleeping due to overthinking (then score 2), if you fall asleep but have trouble staying asleep, for example, frequent urination, nightmares, night terrors (then score 3), if you sleep for less than 3 hours a day and get up early morning and have difficulty falling back asleep (then score 4))",
+    "Diminished appetite (Do you feel you have reduced appetite without any apparent medical reason?)",
+    "Unworthiness",
+    "Loss of libido and sexual desires or reduced sexual functioning without any apparent medical reasons (Do you feel you have loss of libido and sexual desires or reduced sexual functioning without any apparent medical reasons?)"
+]
 
 # Gmail account credentials
 sender_email = "padam.iit@gmail.com"
@@ -133,20 +152,42 @@ def assess_depression(name, core_params, secondary_params):
 
     return result
 
+additional_param_names = ['Age', 'Gender', 'Medical History']
 
-def submit_form(patient_name, core_params, secondary_params):
+
+def submit_form(patient_name, core_params, secondary_params, additional_params, core_comments, sec_comments):
     result_id = assess_depression(patient_name, core_params, secondary_params)
     remedy = find_value_from_id(result_id, "Remedy")
     result_name = find_value_from_id(result_id, "Name")
-    result_complete = f"Patient {patient_name} is having {result_name}. Suggested Remedy is to {remedy}. "
+    result_complete = f"Client {patient_name} is having {result_name}. Suggested Remedy is to {remedy}. "
     send_email(result_complete)
+    # Append to Excel file in Azure Storage
+    
+    #interleaved_core_params  = [val for pair in zip(core_params, core_comments) for val in pair]  .. creates doube entries
+    #interleaved_sec_params  = [val for pair in zip(secondary_params, sec_comments) for val in pair]
+
+
+    interleaved_core_params = [f"{param}-{comment}" for param, comment in zip(core_params, core_comments)]
+    interleaved_sec_params = [f"{param}-{comment}" for param, comment in zip(secondary_params, sec_comments)]
+
     # Append to Excel file in Azure Storage
     basic_param_names = ['Name', 'Depression Type', 'Remedy']
     basic_params = [patient_name, result_name, remedy]
     sum_param_names = ['Sum']
     sum_params = [global_sum]
-    data_excel = dict(zip(basic_param_names + core_param_names + sec_param_names + sum_param_names,
-                          basic_params + core_params + secondary_params + sum_params))
+    data_excel = dict(zip(basic_param_names + additional_param_names + core_param_names + sec_param_names + sum_param_names,
+                          basic_params + additional_params + interleaved_core_params + interleaved_sec_params + sum_params 
+                          ))
+    
+    
+    #basic_param_names = ['Name', 'Depression Type', 'Remedy']
+    #basic_params = [patient_name, result_name, remedy]
+    #sum_param_names = ['Sum']
+    #sum_params = [global_sum]
+    #data_excel = dict(zip(basic_param_names + core_param_names + sec_param_names + sum_param_names,
+    #                      basic_params + core_params + secondary_params + sum_params))
+    
+    
     df = pd.DataFrame(data_excel, index=[0])
     existing_data = read_from_azure_storage(depression_blob_name)
     df = pd.concat([existing_data, df], ignore_index=True)
@@ -157,28 +198,33 @@ def submit_form(patient_name, core_params, secondary_params):
 def index():
     if request.method == 'POST':
         patient_name = request.form['patient_name']
-        core_params = [int(request.form[f'core_param_{i}']) for i in range(3)]
-        secondary_params = [int(request.form[f'sec_param_{i}']) for i in range(9)]
+        core_params = [int(request.form[f'core_score_{i}']) for i in range(3)]
+        secondary_params = [int(request.form[f'sec_score_{i}']) for i in range(9)]
+        additional_params = [request.form['age'], request.form['gender'], request.form['medical_illness']]
+        core_comments = [request.form[f'core_comment_{i}'] for i in range(3)]
+        sec_comments = [request.form[f'sec_comment_{i}'] for i in range(9)]
 
-        result = submit_form(patient_name, core_params, secondary_params)
+        result = submit_form(patient_name, core_params, secondary_params, additional_params, core_comments, sec_comments)
         return render_template('result.html', result=result)
 
-    core_param_names = ["Depressed Mood",
-                        "Loss of interest and enjoyment",
-                        "Reduced energy leading to increased fatigability, tiredness"
-                        ]
+    core_param_names = [
+        "Depressed Mood (Do you feel low and sad, worthless, hopeless and helpless from past 2 weeks or more?)",
+        "Loss of interest and enjoyment (Do you feel you have lost interest in activities which you used to enjoy earlier?)",
+        "Reduced energy leading to increased fatigability, tiredness and diminished activity (Do you feel low on energy, and tired without any apparent medical reason?)"
+    ]
 
     sec_param_names = [
-        "Reduced concentration and attention",
-        "Apprehension and worry",
-        "Ideas of guilt",
-        "Bleak and pessimistic views of the future",
-        "Ideas or acts of self-harm or suicide",
-        "Disturbed sleep",
-        "Diminished appetite",
+        "Reduced concentration and attention (Do you feel you have reduced concentration and attention, like zoning out or being unable to focus on events and conversations?)",
+        "Apprehension and worry (Do you feel tension, apprehension, and worry for most of the day; is any specific thought going on repeat in your mind?)",
+        "Ideas of guilt (Do you have ideas of guilt that certain incidents of life happened because of you, or do you consider yourself as a culprit for it?)",
+        "Bleak and pessimistic views of the future (Do you have bleak and pessimistic views of the future?)",
+        "Ideas or acts of self-harm or suicide or death wishes (Do you have ideas or acts of self-harm or suicide or death wishes (then score 1), if you have ever planned a suicide (then score 2), if you have attempted self-harm (then score 3), if you have attempted suicide (then score 4))",
+        "Disturbed sleep (Do you feel you have disturbed sleep? If you have problem sleeping due to screentime (then score 1), if you have trouble sleeping due to overthinking (then score 2), if you fall asleep but have trouble staying asleep, for example, frequent urination, nightmares, night terrors (then score 3), if you sleep for less than 3 hours a day and get up early morning and have difficulty falling back asleep (then score 4))",
+        "Diminished appetite (Do you feel you have reduced appetite without any apparent medical reason?)",
         "Unworthiness",
-        "Loss of libido and sexual desires"
+        "Loss of libido and sexual desires or reduced sexual functioning without any apparent medical reasons (Do you feel you have loss of libido and sexual desires or reduced sexual functioning without any apparent medical reasons?)"
     ]
+
 
     # Use zip in the view function before passing to the template
     core_params_zipped = zip(range(len(core_param_names)), core_param_names)
